@@ -5,6 +5,8 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const errorMiddleware = require('./middleware/errorMiddleware');
+const productRoutes = require('./routes/productRoutes');
+
 
 const app = express();
 
@@ -12,6 +14,8 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+app.use('/api/products', productRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
