@@ -1,0 +1,28 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+require('dotenv').config();
+
+const errorMiddleware = require('./middleware/errorMiddleware');
+
+const app = express();
+
+app.use(helmet());
+app.use(cors());
+app.use(morgan('dev'));
+app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'Server is running' });
+});
+
+// Routes will be mounted here as we build them
+// app.use('/api/products', require('./routes/productRoutes'));
+
+app.use(errorMiddleware);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
