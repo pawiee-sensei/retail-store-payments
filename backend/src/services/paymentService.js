@@ -23,7 +23,11 @@ const paymentService = {
     const intent = await stripe.paymentIntents.create({
       amount: amountInCentavos,
       currency: 'php',
-      metadata: { order_id: order.id.toString() } // ties Stripe object back to our order
+      metadata: { order_id: order.id.toString() }, // ties Stripe object back to our order
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never'
+      }
     });
 
     await paymentModel.create({
@@ -36,7 +40,10 @@ const paymentService = {
     });
 
     // client_secret is what the frontend needs to actually collect card details
-    return { client_secret: intent.client_secret, payment_intent_id: intent.id };
+    return {
+        client_secret: intent.client_secret,
+        payment_intent_id: intent.id
+    };
   },
 
   // Step 2: called by Stripe's webhook when payment status changes
