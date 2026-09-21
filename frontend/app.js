@@ -1,7 +1,7 @@
 const API_BASE = 'http://localhost:5000/api';
 let cart = []; // { product_id, name, price, quantity }
 
-const stripe = Stripe('pk_test_51UBWszCMziY5TSm3oJVZT1dDJABnXIiEPrDeYzzJFw0bUf1x4emOruXv4QUeoM4UEfIjImuNuvZtLSsO8csY1y0Q00ml5Ub2uK');
+const stripe = Stripe('pk_test_51UBWszCMziY5TSm3v6o3jgRAWxrgVnOXtwsi6b7tYgF1Xp6zgWFYezi2twNXNdvbP6F3HV0vvFsVVmZtGlGwqyx2003JB8GdrF');
 const elements = stripe.elements();
 const cardElement = elements.create('card');
 
