@@ -13,6 +13,12 @@ const paymentController = {
     res.status(201).json({ success: true, data: result });
   }),
 
+  // Called by frontend to check payment status for an order
+  getByOrderId: asyncHandler(async (req, res) => {
+    const payment = await paymentService.getPaymentByOrderId(req.params.order_id);
+    res.json({ success: true, data: payment });
+  }),
+
   // Called by STRIPE, not your frontend — this is the webhook endpoint
   handleWebhook: asyncHandler(async (req, res) => {
     const sig = req.headers['stripe-signature'];

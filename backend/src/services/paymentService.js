@@ -7,6 +7,19 @@ const orderModel = require('../models/orderModel');
 const AppError = require('../utils/AppError');
 
 const paymentService = {
+  async getPaymentByOrderId(order_id) {
+    const payment = await paymentModel.findByOrderId(order_id);
+    if (!payment) {
+      throw new AppError('No payment found for this order', 404);
+    }
+    return {
+      order_id: payment.order_id,
+      status: payment.status,
+      amount: payment.amount,
+      created_at: payment.created_at
+    };
+  },
+
   // Step 1: called when customer proceeds to checkout on an existing PENDING order
   async createPaymentIntent(order_id) {
     const order = await orderModel.findById(order_id);
