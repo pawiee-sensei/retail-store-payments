@@ -48,11 +48,10 @@ const paymentService = {
 
   // Step 2: called by Stripe's webhook when payment status changes
   async handleWebhookEvent(event) {
-    const intent = event.data.object; // the PaymentIntent object
+    const intent = event.data.object;
     const payment = await paymentModel.findByStripeIntentId(intent.id);
 
     if (!payment) {
-      // Stripe sent us an event for something we don't have on record — ignore safely
       return;
     }
 
@@ -62,11 +61,45 @@ const paymentService = {
     } else if (event.type === 'payment_intent.payment_failed') {
       newStatus = 'FAILED';
     } else {
-      return; // event type we don't care about yet
+      return;
     }
 
     const previousStatus = payment.status;
-    if (previousStatus === newStatus) return; // already processed, avoid duplicate work
+    if (previousStatus === newStatus) return;
+
+    // If payment succeeded, check stock BEFORE opening the transaction that commits everything
+    if (newStatus === 'PAID') {
+      const [items] = await pool.execute(
+        'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
+        [payment.order_id]
+      );
+
+      for (const item of items) {
+        const [rows] = await pool.execute(
+          'SELECT stock FROM products WHERE id = ?',
+          [item.product_id]
+        );
+        if (rows[0].stock < item.quantity) {
+          // Can't fulfill — refund the customer since Stripe already charged them
+          await stripe.refunds.create({ payment_intent: intent.id });
+
+          await pool.execute(
+            'UPDATE payments SET status = ?, raw_response = ? WHERE id = ?',
+            ['REFUNDED', JSON.stringify(intent), payment.id]
+          );
+          await pool.execute(
+            'UPDATE orders SET status = ? WHERE id = ?',
+            ['FAILED', payment.order_id]
+          );
+          await pool.execute(
+            `INSERT INTO payment_logs (payment_id, previous_status, new_status, source) VALUES (?, ?, ?, ?)`,
+            [payment.id, previousStatus, 'REFUNDED', 'WEBHOOK_AUTO_REFUND']
+          );
+
+          return;
+        }
+      }
+    }
 
     const connection = await pool.getConnection();
     try {
@@ -82,7 +115,6 @@ const paymentService = {
         [newStatus, payment.order_id]
       );
 
-      // Only deduct stock on successful payment — this is where our earlier discussion applies
       if (newStatus === 'PAID') {
         const [items] = await connection.execute(
           'SELECT product_id, quantity FROM order_items WHERE order_id = ?',
@@ -90,13 +122,22 @@ const paymentService = {
         );
 
         for (const item of items) {
-          // Row locking to prevent overselling under concurrent payments
           const [rows] = await connection.execute(
             'SELECT stock FROM products WHERE id = ? FOR UPDATE',
             [item.product_id]
           );
           if (rows[0].stock < item.quantity) {
-            throw new AppError(`Insufficient stock for product ${item.product_id}`, 400);
+            await stripe.refunds.create({ payment_intent: intent.id });
+            await connection.execute(
+              'UPDATE payments SET status = ? WHERE id = ?',
+              ['REFUNDED', payment.id]
+            );
+            await connection.execute(
+              'UPDATE orders SET status = ? WHERE id = ?',
+              ['FAILED', payment.order_id]
+            );
+            await connection.commit();
+            return;
           }
           await connection.execute(
             'UPDATE products SET stock = stock - ? WHERE id = ?',
