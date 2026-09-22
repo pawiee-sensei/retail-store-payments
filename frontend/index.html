@@ -1,38 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Retail Store — Test Checkout</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
-  <h1>Retail Store (Test)</h1>
-
-  <section id="products">
-    <h2>Products</h2>
-    <div id="product-list">Loading products...</div>
-  </section>
-
-  <section id="cart">
-    <h2>Cart</h2>
-    <div id="cart-items">Cart is empty</div>
-    <p>Total: ₱<span id="cart-total">0.00</span></p>
-  </section>
-
-  <section id="checkout" style="display:none;">
-    <h2>Checkout</h2>
-    <input type="text" id="customer-name" placeholder="Your name">
-    <input type="email" id="customer-email" placeholder="Your email">
-    <button id="checkout-btn">Proceed to Payment</button>
-
-    <div id="card-section" style="display:none; margin-top:15px;">
-      <div id="card-element"></div>
-      <button id="pay-btn" style="margin-top:10px;">Pay Now</button>
-      <p id="payment-message"></p>
-    </div>
-  </section>
-
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
