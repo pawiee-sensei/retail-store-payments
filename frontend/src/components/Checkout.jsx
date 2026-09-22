@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useToast } from '../hooks/useToast';
 
 const API_BASE = 'http://localhost:5000/api';
 
 function Checkout({ cart, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
+  const { showToast } = useToast();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [clientSecret, setClientSecret] = useState(null);
-  const [message, setMessage] = useState('');
   const [processing, setProcessing] = useState(false);
 
   async function handleProceedToPayment() {
@@ -61,7 +62,6 @@ function Checkout({ cart, onSuccess }) {
     if (!stripe || !elements || !clientSecret) return;
 
     setProcessing(true);
-    setMessage('Processing...');
 
     try {
       const cardElement = elements.getElement(CardElement);
@@ -73,23 +73,19 @@ function Checkout({ cart, onSuccess }) {
         }
       });
 
-      console.log('Stripe confirmCardPayment result:', result);
-
       const { error, paymentIntent } = result;
 
       if (error) {
-        console.error('Stripe confirm error:', error);
-        setMessage('Payment failed: ' + error.message);
+        showToast('Payment failed: ' + error.message, 'error');
       } else if (paymentIntent) {
-        console.log('Payment intent status was:', paymentIntent.status);
-        setMessage('Payment successful! Order paid.');
+        showToast('Payment successful! Order paid.', 'success');
         onSuccess();
       } else {
-        setMessage('Payment failed: unknown error');
+        showToast('Payment failed: unknown error', 'error');
       }
     } catch (err) {
       console.error('handlePayNow threw an exception:', err);
-      setMessage('Something went wrong: ' + err.message);
+      showToast('Something went wrong: ' + err.message, 'error');
     } finally {
       setProcessing(false);
     }
@@ -119,7 +115,6 @@ function Checkout({ cart, onSuccess }) {
           <button onClick={handlePayNow} disabled={processing} style={{ marginTop: '10px' }}>
             Pay Now
           </button>
-          {message && <p>{message}</p>}
         </div>
       )}
     </section>

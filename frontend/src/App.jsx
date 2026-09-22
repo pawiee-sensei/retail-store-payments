@@ -45,7 +45,7 @@ function App() {
 
       {orderSuccess && (
         <section>
-          <p style={{ color: 'green', fontWeight: 'bold' }}>Payment successful! Order paid.</p>
+          <p>Thanks for your order!</p>
           <button onClick={() => setOrderSuccess(false)}>Start new order</button>
         </section>
       )}
