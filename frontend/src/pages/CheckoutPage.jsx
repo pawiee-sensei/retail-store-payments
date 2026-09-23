@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../hooks/useCart';
 import { useToast } from '../hooks/useToast';
+import './CheckoutPage.css';
 
 const API_BASE = 'http://localhost:5000/api';
 
